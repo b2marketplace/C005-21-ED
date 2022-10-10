@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Services\AmazonSpApiCredentials\Contracts\AmazonSpApiCredentialsServiceInterface;
+use App\Services\AmazonSpApiCredentials\Implementations\FileAmazonSpApiCredentialsService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +15,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind(
+            AmazonSpApiCredentialsServiceInterface::class,
+            function ($app) {
+                return new FileAmazonSpApiCredentialsService();
+            }
+        );
     }
 
     /**

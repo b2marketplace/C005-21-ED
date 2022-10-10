@@ -4,7 +4,7 @@ FROM php:8.1-apache
 # Instalar dependencias necesarias para Laravel y la extensión zip
 RUN apt-get update \
     && apt-get install -y git unzip zip libzip-dev \
-    && docker-php-ext-install zip \
+    && docker-php-ext-install zip pdo_mysql \
     # Instalar Composer
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
