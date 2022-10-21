@@ -67,3 +67,29 @@ Dependiendo de si tus credenciales son "autorizadas" (delegadas por un usuario d
 - **Credenciales auto autorizadas:** pueden requerir un flujo diferente, gestionado directamente por la cuenta de desarrollador.
 
 Cuando el sistema detecta que las credenciales han expirado, lanza el evento `AmazonSpApiCredentialsExpired`. Si necesitas renovar las credenciales automáticamente, debes crear un listener para este evento y gestionar la renovación según el tipo de credencial.
+
+## Cómo modificar el precio de un producto
+
+Para iniciar el proceso de cambio de precio de un producto, utiliza el comando artisan:
+
+```bash
+docker compose exec web php artisan product:add {sku} {price} {marketplace_id}
+```
+
+- `{sku}`: SKU del producto en Amazon.
+- `{price}`: Nuevo precio que deseas establecer.
+- `{marketplace_id}`: (opcional, por defecto España: `A1RKKUPIHCS9HS`).
+
+Este comando crea un nuevo registro de producto en estado `PENDING` y dispara el proceso automatizado de actualización de precio.
+
+## Proceso de actualización de productos
+
+El proceso de actualización de productos sigue una arquitectura basada en eventos y jobs:
+
+1. **Inicialización:** Al ejecutar el comando para añadir un producto, se crea un nuevo registro en la base de datos con estado `PENDING`.
+2. **Evento:** Se dispara el evento `ProductPriceChangePending`.
+3. **Listener:** Un listener escucha este evento y lanza el job `GetProductType`.
+4. **Job GetProductType:** Este job consulta a Amazon el tipo de producto (`product_type`) necesario para poder realizar el cambio de precio. El resultado se almacena en el producto.
+5. **Gestión de errores y reintentos:** El job gestiona automáticamente los reintentos en caso de throttling, expiración de credenciales o errores temporales, y lanza el evento `AmazonSpApiCredentialsExpired` si es necesario renovar credenciales.
+
+> **Nota:** El proceso continuará con la actualización del precio una vez que se disponga del `product_type`. Esta parte se irá completando y documentando a medida que avance el desarrollo.
