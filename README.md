@@ -84,12 +84,25 @@ Este comando crea un nuevo registro de producto en estado `PENDING` y dispara el
 
 ## Proceso de actualización de productos
 
-El proceso de actualización de productos sigue una arquitectura basada en eventos y jobs:
+El proceso de actualización de productos sigue una arquitectura basada en eventos y jobs, permitiendo una gestión desacoplada y escalable:
 
-1. **Inicialización:** Al ejecutar el comando para añadir un producto, se crea un nuevo registro en la base de datos con estado `PENDING`.
-2. **Evento:** Se dispara el evento `ProductPriceChangePending`.
-3. **Listener:** Un listener escucha este evento y lanza el job `GetProductType`.
-4. **Job GetProductType:** Este job consulta a Amazon el tipo de producto (`product_type`) necesario para poder realizar el cambio de precio. El resultado se almacena en el producto.
-5. **Gestión de errores y reintentos:** El job gestiona automáticamente los reintentos en caso de throttling, expiración de credenciales o errores temporales, y lanza el evento `AmazonSpApiCredentialsExpired` si es necesario renovar credenciales.
+1. **Inicialización:**
+   - Al ejecutar el comando para añadir un producto, se crea un nuevo registro en la base de datos con estado `PENDING`.
+2. **Evento `ProductPriceChangePending`:**
+   - Se dispara este evento tras la creación del producto.
+3. **Listener:**
+   - Un listener escucha el evento `ProductPriceChangePending` y lanza el job `GetProductType`.
+4. **Job `GetProductType`:**
+   - Consulta a Amazon el tipo de producto (`product_type`) necesario para poder realizar el cambio de precio.
+   - El resultado se almacena en el producto y, tras ello, se lanza el evento `ProductTypeRetrieved`.
+5. **Evento `ProductTypeRetrieved`:**
+   - Indica que el tipo de producto ha sido recuperado correctamente.
+6. **Listener:**
+   - Un listener escucha el evento `ProductTypeRetrieved` y lanza el job `PerformPriceChange`.
+7. **Job `PerformPriceChange`:**
+   - Ejecuta la lógica de cambio de precio del producto en Amazon.
+8. **Gestión de errores y reintentos:**
+   - Los jobs gestionan automáticamente los reintentos en caso de throttling, expiración de credenciales o errores temporales.
+   - Si es necesario renovar credenciales, se lanza el evento `AmazonSpApiCredentialsExpired`.
 
-> **Nota:** El proceso continuará con la actualización del precio una vez que se disponga del `product_type`. Esta parte se irá completando y documentando a medida que avance el desarrollo.
+

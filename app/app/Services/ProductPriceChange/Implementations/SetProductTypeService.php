@@ -15,6 +15,7 @@ class SetProductTypeService implements SetProductTypeServiceInterface
     {
         try {
             $product->product_type = $productType;
+            $product->status = Product::STATUS_IN_PROGRESS;
             $product->save();
         } catch (\Throwable $e) {
             throw new SetProductTypeException('Could not set product type: ' . $e->getMessage(), 0, $e);

@@ -6,6 +6,7 @@ use App\Services\AmazonCatalog\Contracts\AmazonCatalogServiceInterface;
 use App\Services\AmazonCatalog\Exceptions\AmazonCatalogException;
 use App\Services\AmazonCatalog\Exceptions\AmazonCatalogThrottledException;
 use App\Services\AmazonCatalog\Exceptions\AmazonCatalogUnauthorizedException;
+use App\Services\AmazonCatalog\Exceptions\AmazonCatalogProductTypeNotFoundException;
 use App\Services\AmazonSpApiCredentials\Contracts\AmazonSpApiCredentialsServiceInterface;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
@@ -25,7 +26,7 @@ class AmazonCatalogService implements AmazonCatalogServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function getProductTypesBySku(string $sku, string $marketplaceId): array
+    public function getProductTypeBySku(string $sku, string $marketplaceId): string
     {
         $lock = Cache::lock('get_product_type', 2);
         if (!$lock->get()) {
@@ -47,7 +48,7 @@ class AmazonCatalogService implements AmazonCatalogServiceInterface
                     'includedData' => ['productTypes'],
                     'pageSize' => 1,
                 ],
-                'http_errors' => false, // No lanzar excepciones automáticas
+                'http_errors' => false,
             ]);
 
             $status = $response->getStatusCode();
@@ -62,11 +63,15 @@ class AmazonCatalogService implements AmazonCatalogServiceInterface
             }
 
             $data = json_decode($response->getBody(), true);
-            return $data['items'][0]['productTypes'] ?? [];
-        } catch (AmazonCatalogThrottledException | AmazonCatalogUnauthorizedException $e) {
+            $productType = $data['items'][0]['productTypes'][0]['productType'] ?? null;
+            if (empty($productType)) {
+                throw new AmazonCatalogProductTypeNotFoundException('No productType found for SKU: ' . $sku);
+            }
+            return $productType;
+        } catch (AmazonCatalogThrottledException | AmazonCatalogUnauthorizedException | AmazonCatalogWaitLockException | AmazonCatalogProductTypeNotFoundException $e) {
             throw $e;
         } catch (\Throwable $e) {
-            throw new AmazonCatalogException('Error getting product types: ' . $e->getMessage(), 0, $e);
+            throw new AmazonCatalogException('Error getting product type: ' . $e->getMessage(), 0, $e);
         } finally {
             optional($lock)->release();
         }

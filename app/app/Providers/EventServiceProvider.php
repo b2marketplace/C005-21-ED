@@ -8,6 +8,8 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 use Illuminate\Support\Facades\Event;
 use App\Events\ProductPriceChangePending;
 use App\Listeners\ProductPriceChange\InizializeProductChangeProcess;
+use App\Events\ProductTypeRetrieved;
+use App\Listeners\ProductTypeRetrieved\HandleProductTypeRetrieved;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -22,6 +24,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         ProductPriceChangePending::class => [
             InizializeProductChangeProcess::class,
+        ],
+        ProductTypeRetrieved::class => [
+            HandleProductTypeRetrieved::class,
         ],
     ];
 
