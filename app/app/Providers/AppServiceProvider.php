@@ -50,6 +50,13 @@ class AppServiceProvider extends ServiceProvider
                 return new SetProductTypeService();
             }
         );
+
+        $this->app->bind(
+            \App\Services\AmazonListing\Contracts\AmazonListingServiceInterface::class,
+            function ($app) {
+                return new \App\Services\AmazonListing\Implementations\AmazonListingService();
+            }
+        );
     }
 
     /**
