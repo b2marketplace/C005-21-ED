@@ -16,7 +16,8 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $products = Product::orderByDesc('created_at')->get();
+        $perPage = $request->input('per_page', 10);
+        $products = Product::orderBy('created_at', 'desc')->paginate($perPage);
         return response()->json($products);
     }
 }

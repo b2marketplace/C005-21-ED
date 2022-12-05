@@ -105,4 +105,25 @@ El proceso de actualización de productos sigue una arquitectura basada en event
    - Los jobs gestionan automáticamente los reintentos en caso de throttling, expiración de credenciales o errores temporales.
    - Si es necesario renovar credenciales, se lanza el evento `AmazonSpApiCredentialsExpired`.
 
+## Listado de productos
+
+El sistema incluye una pantalla web para consultar el listado de productos registrados y su estado de procesamiento. Puedes acceder a esta pantalla accediendo a la URL principal del proyecto en tu navegador. Con la configuración del docker debería ser http://localhost:8080
+
+![Listado de productos](assets/productos.png)
+
+En esta pantalla podrás:
+
+- Visualizar todos los productos registrados, su SKU, tipo, precio y estado actual.
+- Consultar el estado de cada producto (Pendiente, En progreso, Completado, Fallado, Expirado, Cancelado).
+- Navegar entre páginas de productos mediante la paginación.
+
+La tabla muestra los siguientes campos:
+
+- **SKU**: Identificador del producto en Amazon.
+- **Tipo**: Tipo de producto recuperado desde Amazon.
+- **Precio**: Precio actual registrado en el sistema.
+- **Estado**: Estado del proceso de cambio de precio.
+
+La interfaz está desarrollada con Vue.js y Bootstrap 4.
+
 
